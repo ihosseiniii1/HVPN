@@ -1,0 +1,246 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/**
+ * HVPN — Professional theme tokens
+ * A refined "deep-slate + indigo" design system.
+ * Copyright (c) 2025 Hohoseini. Watermark: sr-Hohoseini-2025-9f4c1a7e
+ */
+:root {
+  color-scheme: light;
+
+  /* Brand accent */
+  --main: #4f46e5;        /* indigo-600 */
+  --main-hover: #4338ca;  /* indigo-700 */
+
+  /* Surfaces */
+  --bg: #f6f7fb;
+  --bw: #ffffff;
+  --blank: #ffffff;
+
+  /* Content */
+  --text: #0f172a;        /* slate-900 */
+  --text-muted: #64748b;  /* slate-500 */
+  --mtext: #ffffff;       /* text rendered on top of --main */
+
+  /* Lines, focus & effects */
+  --border: #e6e9f1;
+  --border-strong: #d7dce7;
+  --ring: #6366f1;
+  --ring-offset: #ffffff;
+  --overlay: rgba(15, 23, 42, 0.5);
+
+  --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.06);
+  --shadow: 0 1px 2px rgba(16, 24, 40, 0.05), 0 10px 30px -12px rgba(16, 24, 40, 0.18);
+  --shadow-lg: 0 4px 12px -2px rgba(16, 24, 40, 0.08), 0 24px 48px -16px rgba(16, 24, 40, 0.22);
+
+  --gap: 1rem;
+  --duration: 40s;
+}
+
+.dark {
+  color-scheme: dark;
+
+  --main: #6366f1;        /* indigo-500 */
+  --main-hover: #7c83f5;
+
+  --bg: #080b14;
+  --bw: #10162a;
+  --blank: #e6ebf5;
+
+  --text: #e8edf7;
+  --text-muted: #94a3b8;
+  --mtext: #ffffff;
+
+  --border: #1e2740;
+  --border-strong: #2c3755;
+  --ring: #818cf8;
+  --ring-offset: #080b14;
+  --overlay: rgba(2, 6, 23, 0.72);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 12px 34px -14px rgba(0, 0, 0, 0.7);
+  --shadow-lg: 0 8px 24px -6px rgba(0, 0, 0, 0.5), 0 32px 64px -20px rgba(0, 0, 0, 0.8);
+}
+
+* {
+  border-color: var(--border);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overscroll-behavior: none;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--main) 26%, transparent);
+}
+
+/* Element defaults for a polished, formal typographic rhythm */
+h1,
+h2,
+h3,
+h4 {
+  letter-spacing: -0.02em;
+}
+
+/* Display typeface for the shared "font-heading" marker class */
+.font-heading {
+  font-family: "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
+}
+
+@layer utilities {
+  .neo-shadow {
+    box-shadow: var(--shadow);
+  }
+  .neo-shadow-sm {
+    box-shadow: var(--shadow-sm);
+  }
+  .neo-shadow-lg {
+    box-shadow: var(--shadow-lg);
+  }
+  .neo-border {
+    border: 1px solid var(--border);
+  }
+  .text-muted {
+    color: var(--text-muted);
+  }
+  .glass {
+    background-color: color-mix(in srgb, var(--bw) 80%, transparent);
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .grid-dots {
+    background-image: radial-gradient(var(--border) 1px, transparent 1px);
+    background-size: 24px 24px;
+    opacity: 0.55;
+  }
+}
+
+@keyframes wiggle {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-10deg);
+  }
+  75% {
+    transform: rotate(10deg);
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes drift1 {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(40px, 30px) scale(1.08);
+  }
+  66% {
+    transform: translate(-20px, 50px) scale(0.96);
+  }
+}
+
+@keyframes drift2 {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(-50px, 40px) scale(1.12);
+  }
+}
+
+@keyframes drift3 {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  40% {
+    transform: translate(30px, -40px) scale(1.08);
+  }
+  70% {
+    transform: translate(-40px, -20px) scale(0.92);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes marquee-badges {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--text) 22%, transparent);
+  border: 3px solid transparent;
+  background-clip: content-box;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--text) 36%, transparent);
+  background-clip: content-box;
+}
