@@ -366,8 +366,49 @@ do_uninstall() {
   exit 0
 }
 
+do_test() {
+  load
+  docker inspect -f '{{.State.Running}}' hvpn 2>/dev/null | grep -q true || { echo -e "${R}Container is not running.${N}"; return 1; }
+  local info uuid path code t
+  info=$(docker exec hvpn node --no-warnings -e '
+    const {DatabaseSync}=require("node:sqlite");
+    const db=new DatabaseSync("/data/hvpn.db");
+    const u=db.prepare("SELECT uuid FROM users WHERE enabled=1 LIMIT 1").get();
+    const i=db.prepare("SELECT path FROM inbounds WHERE tag=\x27VLESS-WS\x27 AND enabled=1").get();
+    console.log(u&&i ? u.uuid+" "+i.path : "");' 2>/dev/null)
+  [[ -n "$info" ]] || { echo -e "${R}No enabled user + enabled VLESS-WS inbound found.${N}"; return 1; }
+  uuid="${info%% *}"; path="${info#* }"
+  echo -e "${C}Testing the full path: client -> https://${DOMAIN}:443 -> Caddy -> panel -> Xray -> internet${N}"
+  docker exec hvpn sh -c 'cp /data/xray/xray /tmp/xray-test'
+  docker exec -i hvpn sh -c 'cat > /tmp/test-client.json' <<EOF
+{ "log": { "loglevel": "warning" },
+  "inbounds": [ { "listen": "127.0.0.1", "port": 19080, "protocol": "socks", "settings": { "udp": false } } ],
+  "outbounds": [ { "protocol": "vless",
+    "settings": { "vnext": [ { "address": "${DOMAIN}", "port": 443, "users": [ { "id": "${uuid}", "encryption": "none" } ] } ] },
+    "streamSettings": { "network": "ws", "security": "tls",
+      "tlsSettings": { "serverName": "${DOMAIN}", "fingerprint": "chrome", "alpn": [ "http/1.1" ] },
+      "wsSettings": { "path": "${path}", "headers": { "Host": "${DOMAIN}" } } } } ] }
+EOF
+  docker exec -d hvpn sh -c '/tmp/xray-test run -config /tmp/test-client.json >/tmp/test-client.log 2>&1'
+  sleep 3
+  t=$(curl --socks5-hostname 127.0.0.1:19080 -m 20 -s -o /dev/null -w '%{http_code} %{time_total}' https://www.gstatic.com/generate_204 2>/dev/null || true)
+  code="${t%% *}"
+  echo -e "--- client log (Xray) ---"
+  docker exec hvpn sh -c 'grep -v -i deprecated /tmp/test-client.log | tail -8' 2>/dev/null
+  docker exec hvpn sh -c 'pkill xray-test; rm -f /tmp/xray-test /tmp/test-client.json /tmp/test-client.log' >/dev/null 2>&1 || true
+  echo "---------------------------"
+  if [[ "$code" == "204" ]]; then
+    echo -e "${G}TUNNEL OK${N} (HTTP 204 in ${t#* }s). The server side works end to end;"
+    echo "if your app still shows -1, the problem is on the client/network side."
+  else
+    echo -e "${R}TUNNEL FAILED${N} (result: '${t:-no response}')."
+    echo "Check next:  hvpn logs  (option 1 panel, 2 Caddy)  and the client log above."
+    echo "DNS check from this server:  dig +short google.com   and   dig +short google.com @1.1.1.1"
+  fi
+}
+
 usage() {
-  echo "Usage: hvpn [info|restart|update|password|domain|port|logs|tune|uninstall]"
+  echo "Usage: hvpn [info|restart|update|password|domain|port|logs|tune|test|uninstall]"
   echo "       hvpn            (interactive menu)"
 }
 
@@ -380,6 +421,7 @@ case "${1:-}" in
   port)        do_port; exit 0 ;;
   logs)        do_logs; exit 0 ;;
   tune)        tune_system; exit 0 ;;
+  test)        do_test; exit 0 ;;
   uninstall)   do_uninstall; exit 0 ;;
   _write-config) load; write_config; exit 0 ;;
   -h|--help|help) usage; exit 0 ;;
@@ -399,7 +441,8 @@ while true; do
   echo " 5) Change local port"
   echo " 6) View logs"
   echo " 7) Re-apply speed tuning (BBR / buffers)"
-  echo " 8) Uninstall"
+  echo " 8) Test tunnel end-to-end"
+  echo " 9) Uninstall"
   echo " 0) Exit"
   read -rp "Choose: " c || exit 0
   case "$c" in
@@ -410,7 +453,8 @@ while true; do
     5) do_port;      pause ;;
     6) do_logs ;;
     7) tune_system;  pause ;;
-    8) do_uninstall; pause ;;
+    8) do_test;      pause ;;
+    9) do_uninstall; pause ;;
     0) exit 0 ;;
   esac
 done

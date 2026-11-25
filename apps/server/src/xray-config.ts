@@ -99,7 +99,7 @@ export function buildXrayConfig() {
       services: ["HandlerService", "StatsService", "LoggerService"],
     },
     dns: {
-      servers: ["1.1.1.1", "8.8.8.8"],
+      servers: ["localhost"], // system resolver (same one the host uses), cached by Xray
       queryStrategy: "UseIPv4",
     },
     stats: {},
